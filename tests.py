@@ -1,14 +1,11 @@
 from actions import *
-from carte import *
-from labyrinthe import *
 
-# On choisit une carte
-carte_choisie = chargement_des_cartes()[0]
 
-# On imprime la carte
-afficher_labyrinthe(carte_choisie.labyrinthe)
-carte_choisie.labyrinthe.robot
+# tester charger les cartes
+def test_charger_carte():
+    assert type(chargement_des_cartes()) == list
 
+"""
 # On effectue un movement vers l'ouest et on l'affiche
 carte_choisie.labyrinthe.executer_instruction("o1")
 afficher_labyrinthe(carte_choisie.labyrinthe)
@@ -25,3 +22,4 @@ afficher_labyrinthe(carte_choisie.labyrinthe)
 # On effectue un movement vers le sud et on l'affiche
 carte_choisie.labyrinthe.executer_instruction("s3")
 afficher_labyrinthe(carte_choisie.labyrinthe)
+"""

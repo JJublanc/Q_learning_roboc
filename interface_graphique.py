@@ -1,36 +1,78 @@
 from tkinter import *
+import random
+from time import sleep
+from actions import *
+import pandas as pd
+import numpy as np
 
 
-class Interface(Frame):
-    """Notre fenêtre principale.
-    Tous les widgets sont stockés comme attributs de cette fenêtre."""
+def exploiting_robot(q=pd.DataFrame(columns=["s", "a", "q"]),
+                  labyrinthe=chargement_des_cartes()[0].labyrinthe,
+                  epsilon=1):
+    """
+    Initialisation des paramètres
+    """
+    try:
+        Q = q
+        assert isinstance(Q, pd.DataFrame)
+        assert [q.columns] == ["s", "a", "q"]
+    except AssertionError:
+        print("Q doit être un dataFrame avec trois colonnes nommées s, a et q")
+        Q = pd.DataFrame(columns=["s", "a", "q"])
 
-    def __init__(self, fenetre, grille, **kwargs):
-        Frame.__init__(self, fenetre, width=768, height=576, **kwargs)
-        self.pack(fill=BOTH)
-        self.nb_clic = 0
+    # on place le robot au hasard dans un emplacement vide
+    placement_robot = random.choice(labyrinthe.places_libres)
+    labyrinthe.changer_position(placement_robot[0], placement_robot[1])
 
-        # Création de nos widgets
-        self.message = Label(self, text=grille)
-        self.message.pack()
+    # on initialise la fin de partie à False
+    fin_partie = False
 
-        self.bouton_quitter = Button(self, text="Quitter", command=self.quit)
-        self.bouton_quitter.pack(side="left")
+    # on initialise le nombre d'essais
+    nb_essais = 1
 
-        self.bouton_cliquer = Button(self, text="Cliquez ici", fg="red",
-                                     command=self.cliquer)
-        self.bouton_cliquer.pack(side="right")
+    # on initialise la sortie graphique
+    fenetre = Tk()
+    var = StringVar()
+    var.set(labyrinthe.grille)
+    labyrinthe_sortie = Label(fenetre, textvariable=var, anchor="e", width=20)
+    labyrinthe_sortie.pack()
+    s = '\n'.join(["".join(line) for line in labyrinthe.grille])
 
-    def cliquer(self):
-        """Il y a eu un clic sur le bouton.
+    # on joue
+    while not fin_partie:
+        # Etat de l'environnement : ici c'est le labyrinthe (position des obstacles, portes, sorties et robot)
 
-        On change la valeur du label message."""
+        rand = np.random.choice((0, 1), p=[epsilon, (1 - epsilon)])
 
-        self.nb_clic += 1
-        self.message["text"] = "Vous avez cliqué {} fois.".format(self.nb_clic)
+        # si l'état est connu et qu'on est dans une configuration greedy on choisit
+        # l'action maximisant l'espérance de gain sinon on effectue un mouvement au hasard
+        if (s in list(Q.s)) & (rand == 1):
+            if max(Q[Q.s == s].q) > 0:
+                max_q = max(Q[Q.s == s].q)
+                print(max_q)
+                a = random.choice(Q[(Q.s == s) & (Q.q == max_q)])
+            else:
+                a = random.choice(['n', 's', 'e', 'o'])
+        else:
+            a = random.choice(['n', 's', 'e', 'o'])
+        # TODO transformer le choix de l'action en fonction
 
+        # on met à jour l'état du labyrinthe
+        s = '\n'.join(["".join(line) for line in labyrinthe.grille])
 
-fenetre = Tk()
-interface = Interface(fenetre, grille="zlriufblvcj")
-interface.mainloop()
-interface.destroy()
+        # on effectue l'action choisie, ici on bouge (on tente de bouger) le robot
+        fin_partie = labyrinthe.executer_instruction(a)
+        var.set(s)
+        fenetre.update()
+        sleep(0.1)
+
+        # TODO idem transformer en fonction
+
+        if fin_partie:
+            var.set("Félicitations ! Vous avez mis {} coups pour réussir".format(nb_essais))
+        else:
+            nb_essais += 1
+
+exploiting_robot()
+
+labyrinthe=chargement_des_cartes()[0].labyrinthe
