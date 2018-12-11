@@ -20,7 +20,7 @@ def Q_learning_test(nb_iter=1, q=pd.DataFrame(columns=["s", "a", "q"])):
     alpha = 0.8  # taux d'apprentissage
     epsilon = 0.1  # paramètre epsilon pour la epsilon-greedy policy
     nombre_essais = []
-
+  
     """
     Boucle pour plusieurs parties
     """
